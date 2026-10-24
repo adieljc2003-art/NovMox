@@ -280,8 +280,24 @@
     var tipoSel = e.tipo || 'peliculas';
     var eps = (e.episodios || []).map(function (x) { return x.titulo + ' | ' + x.video; }).join('\n');
 
+    // Sin clave, el recuadro de TMDB va arriba para que se vea primero
+    var sinClave = !tmdbKey();
+    var panelTmdb =
+'<div class="panel">' +
+            '<h2>Carátulas automáticas (TMDB)</h2>' +
+            '<p class="tenue" style="line-height:1.55">Pega tu clave de <b>themoviedb.org</b> y al agregar una película se buscan solas la carátula, el fondo, el año y la descripción. ' +
+            'La clave se guarda solo en este dispositivo; tus amigos no la necesitan.</p>' +
+            '<label class="etiqueta" for="f-tmdb">Clave de API (v3) o token de lectura (v4)</label>' +
+            '<input class="campo focusable" id="f-tmdb" type="password" autocomplete="off" placeholder="Pega aquí tu clave" value="' + esc(tmdbKey()) + '">' +
+            '<div class="botones" style="margin-top:1rem">' +
+              '<button class="btn btn-primario focusable" type="button" id="btn-tmdb-guardar">Guardar clave</button>' +
+              '<button class="btn focusable" type="button" id="btn-tmdb-completar">Completar carátulas faltantes</button>' +
+            '</div>' +
+          '</div>';
+
     $('#vista').innerHTML =
       '<h1 class="titulo-seccion">Mi catálogo</h1>' +
+      (sinClave ? '<div class="tmdb-arriba">' + panelTmdb + '</div>' : '') +
       '<div class="dos-col">' +
         '<div>' +
           '<form class="panel" id="form-item" autocomplete="off">' +
@@ -334,17 +350,7 @@
                 }).join('') + '</ul>'
               : '<p class="tenue">Aún no agregas nada. Lo que agregues se guarda en este dispositivo.</p>') +
           '</div>' +
-          '<div class="panel">' +
-            '<h2>Carátulas automáticas (TMDB)</h2>' +
-            '<p class="tenue" style="line-height:1.55">Pega tu clave de <b>themoviedb.org</b> y al agregar una película se buscan solas la carátula, el fondo, el año y la descripción. ' +
-            'La clave se guarda solo en este dispositivo; tus amigos no la necesitan.</p>' +
-            '<label class="etiqueta" for="f-tmdb">Clave de API (v3) o token de lectura (v4)</label>' +
-            '<input class="campo focusable" id="f-tmdb" type="password" autocomplete="off" placeholder="Pega aquí tu clave" value="' + esc(tmdbKey()) + '">' +
-            '<div class="botones" style="margin-top:1rem">' +
-              '<button class="btn btn-primario focusable" type="button" id="btn-tmdb-guardar">Guardar clave</button>' +
-              '<button class="btn focusable" type="button" id="btn-tmdb-completar">Completar carátulas faltantes</button>' +
-            '</div>' +
-          '</div>' +
+          (sinClave ? '' : panelTmdb) +
           '<div class="panel">' +
             '<h2>Compartir con tus amigos</h2>' +
             '<p class="tenue" style="line-height:1.55">Cada ficha tiene un botón <b>Compartir</b> que genera un enlace y un código QR. ' +

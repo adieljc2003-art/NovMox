@@ -185,6 +185,8 @@ textarea.campo { min-height: 6rem; resize: vertical; }
 .lista-mis .info b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lista-mis .info span { font-size: 0.8rem; color: var(--tenue); }
 
+.tmdb-arriba { margin-bottom: 2rem; }
+.tmdb-arriba .panel { border-color: rgba(59, 130, 246, 0.5); }
 .tmdb-res:empty { display: none; }
 .tmdb-res { margin-top: 0.8rem; }
 .tmdb-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.8rem; margin-top: 0.5rem; }
