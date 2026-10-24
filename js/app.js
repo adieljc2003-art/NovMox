@@ -7,6 +7,9 @@
   'use strict';
 
   var LS_PROPIOS = 'novmox.propios';
+  var LS_TMDB = 'novmox.tmdb';
+  var TMDB_API = 'https://api.themoviedb.org/3/';
+  var TMDB_IMG = 'https://image.tmdb.org/t/p/';
   var HLS_JS = 'https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js';
   var QR_JS = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
 
@@ -27,7 +30,8 @@
     heroTimer: null,
     focoPrevio: null,
     hls: null,
-    editando: null
+    editando: null,
+    tmdbRes: []
   };
 
   function $(sel, el) { return (el || document).querySelector(sel); }
@@ -290,6 +294,8 @@
             '</div>' +
             '<label class="etiqueta" for="f-titulo">Título *</label>' +
             '<input class="campo focusable" id="f-titulo" required value="' + esc(e.titulo) + '">' +
+            '<div class="botones" style="margin-top:.6rem"><button class="btn btn-chico focusable" type="button" id="btn-tmdb">Buscar carátula en TMDB</button></div>' +
+            '<div class="tmdb-res" id="tmdb-res"></div>' +
             '<div id="bloque-video">' +
               '<label class="etiqueta" for="f-video">Enlace del video *</label>' +
               '<input class="campo focusable" id="f-video" type="url" placeholder="https://…/pelicula.mp4" value="' + esc(e.video) + '">' +
@@ -329,6 +335,17 @@
               : '<p class="tenue">Aún no agregas nada. Lo que agregues se guarda en este dispositivo.</p>') +
           '</div>' +
           '<div class="panel">' +
+            '<h2>Carátulas automáticas (TMDB)</h2>' +
+            '<p class="tenue" style="line-height:1.55">Pega tu clave de <b>themoviedb.org</b> y al agregar una película se buscan solas la carátula, el fondo, el año y la descripción. ' +
+            'La clave se guarda solo en este dispositivo; tus amigos no la necesitan.</p>' +
+            '<label class="etiqueta" for="f-tmdb">Clave de API (v3) o token de lectura (v4)</label>' +
+            '<input class="campo focusable" id="f-tmdb" type="password" autocomplete="off" placeholder="Pega aquí tu clave" value="' + esc(tmdbKey()) + '">' +
+            '<div class="botones" style="margin-top:1rem">' +
+              '<button class="btn btn-primario focusable" type="button" id="btn-tmdb-guardar">Guardar clave</button>' +
+              '<button class="btn focusable" type="button" id="btn-tmdb-completar">Completar carátulas faltantes</button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="panel">' +
             '<h2>Compartir con tus amigos</h2>' +
             '<p class="tenue" style="line-height:1.55">Cada ficha tiene un botón <b>Compartir</b> que genera un enlace y un código QR. ' +
             'Para que tus amigos vean <b>todo</b> tu catálogo al abrir la página, descarga el archivo y súbelo a <code>data/catalogo.json</code> en tu repositorio.</p>' +
@@ -343,6 +360,106 @@
 
     actualizarBloques(tipoSel);
     enlazarFormulario();
+  }
+
+  /* ---------- TMDB (carátulas automáticas) ---------- */
+
+  function tmdbKey() {
+    try { return localStorage.getItem(LS_TMDB) || ''; } catch (e) { return ''; }
+  }
+
+  function tmdbPedir(ruta, params) {
+    var key = tmdbKey();
+    if (!key) return Promise.reject(new Error('sin-clave'));
+    var opts = { headers: { accept: 'application/json' } };
+    // Token v4 (largo, tipo JWT) va en la cabecera; la clave v3 va en la URL
+    if (key.length > 40) opts.headers.Authorization = 'Bearer ' + key;
+    else params += '&api_key=' + encodeURIComponent(key);
+    return fetch(TMDB_API + ruta + '?' + params, opts).then(function (r) {
+      if (r.status === 401) throw new Error('clave-mala');
+      if (!r.ok) throw new Error('red');
+      return r.json();
+    }, function () { throw new Error('red'); });
+  }
+
+  function tmdbNormalizar(r) {
+    var fecha = r.release_date || r.first_air_date || '';
+    return {
+      titulo: r.title || r.name,
+      anio: parseInt(fecha.slice(0, 4), 10) || undefined,
+      descripcion: r.overview || undefined,
+      poster: r.poster_path ? TMDB_IMG + 'w500' + r.poster_path : undefined,
+      fondo: r.backdrop_path ? TMDB_IMG + 'w1280' + r.backdrop_path : undefined
+    };
+  }
+
+  function tmdbBuscar(titulo, tipo, anio) {
+    // Series buscan primero en TV; lo demás primero en películas y luego en TV
+    var rutas = tipo === 'series' ? ['tv', 'movie'] : ['movie', 'tv'];
+    var intentos = [];
+    rutas.forEach(function (ruta) {
+      if (anio) intentos.push({ ruta: ruta, anio: anio });
+      intentos.push({ ruta: ruta });
+    });
+    var probar = function (i) {
+      if (i >= intentos.length) return Promise.resolve([]);
+      var it = intentos[i];
+      var params = 'query=' + encodeURIComponent(titulo) + '&language=es-MX&include_adult=false';
+      if (it.anio) params += (it.ruta === 'tv' ? '&first_air_date_year=' : '&year=') + encodeURIComponent(it.anio);
+      return tmdbPedir('search/' + it.ruta, params).then(function (d) {
+        var lista = (d.results || []).map(tmdbNormalizar).filter(function (r) { return r.poster || r.fondo; });
+        return lista.length ? lista : probar(i + 1);
+      });
+    };
+    return probar(0);
+  }
+
+  function mensajeTmdb(err) {
+    var m = err && err.message;
+    if (m === 'sin-clave') return 'Primero guarda tu clave de TMDB';
+    if (m === 'clave-mala') return 'La clave de TMDB no es válida';
+    return 'No se pudo conectar con TMDB';
+  }
+
+  /* Rellena el formulario; los campos que ya escribiste no se pisan (salvo las imágenes si eliges a mano) */
+  function aplicarTmdb(r, forzarImagenes) {
+    if (!r) return;
+    var poner = function (id, valor, forzar) {
+      var campo = $(id);
+      if (valor && (forzar || !campo.value.trim())) campo.value = valor;
+    };
+    poner('#f-poster', r.poster, forzarImagenes);
+    poner('#f-fondo', r.fondo, forzarImagenes);
+    poner('#f-anio', r.anio, false);
+    poner('#f-desc', r.descripcion, false);
+  }
+
+  function completarCaratulas() {
+    if (!tmdbKey()) { toast('Primero guarda tu clave de TMDB'); return; }
+    var faltan = state.propios.filter(function (p) { return !p.poster && !p.fondo && !EN_VIVO[p.tipo]; });
+    if (!faltan.length) { toast('Todas tus películas ya tienen carátula'); return; }
+    toast('Buscando ' + faltan.length + ' carátulas…');
+    var hechas = 0;
+    var siguiente = function (i) {
+      if (i >= faltan.length) {
+        guardarPropios();
+        toast(hechas + ' de ' + faltan.length + ' carátulas agregadas');
+        vistaMis();
+        return;
+      }
+      var p = faltan[i];
+      tmdbBuscar(p.titulo, p.tipo, p.anio).then(function (lista) {
+        var r = lista[0];
+        if (r) {
+          p.poster = r.poster;
+          p.fondo = r.fondo;
+          if (!p.anio && r.anio) p.anio = r.anio;
+          if (!p.descripcion && r.descripcion) p.descripcion = r.descripcion;
+          hechas++;
+        }
+      }).catch(function () {}).then(function () { siguiente(i + 1); });
+    };
+    siguiente(0);
   }
 
   function actualizarBloques(tipo) {
@@ -365,8 +482,65 @@
 
     $('#f-dest').addEventListener('click', function () { this.classList.toggle('on'); });
 
+    $('#btn-tmdb').addEventListener('click', function () {
+      var titulo = $('#f-titulo').value.trim();
+      if (!titulo) { toast('Escribe primero el título'); $('#f-titulo').focus(); return; }
+      if (!tmdbKey()) { toast('Primero guarda tu clave de TMDB'); $('#f-tmdb').focus(); return; }
+      var res = $('#tmdb-res');
+      res.innerHTML = '<p class="tenue">Buscando…</p>';
+      tmdbBuscar(titulo, tipo, $('#f-anio').value.trim()).then(function (lista) {
+        state.tmdbRes = lista.slice(0, 12);
+        res.innerHTML = state.tmdbRes.length
+          ? '<p class="ayuda">Elige la correcta:</p><div class="tmdb-lista">' + state.tmdbRes.map(function (r, i) {
+              return '<button type="button" class="tmdb-op focusable" data-tmdb="' + i + '">' +
+                '<div class="poster">' + posterGenerado(r) + imagen(r.poster, r.titulo) + '</div>' +
+                '<b>' + esc(r.titulo) + '</b><span>' + esc(r.anio || '') + '</span></button>';
+            }).join('') + '</div>'
+          : '<p class="tenue">No se encontró nada con ese título.</p>';
+        var primero = $('.tmdb-op', res);
+        if (primero) primero.focus();
+      }).catch(function (err) {
+        res.innerHTML = '';
+        toast(mensajeTmdb(err));
+      });
+    });
+
+    $('#tmdb-res').addEventListener('click', function (ev) {
+      var op = ev.target.closest('[data-tmdb]');
+      if (!op) return;
+      aplicarTmdb(state.tmdbRes[parseInt(op.getAttribute('data-tmdb'), 10)], true);
+      $('#tmdb-res').innerHTML = '';
+      toast('Carátula lista');
+      $('#f-titulo').focus();
+    });
+
+    $('#btn-tmdb-guardar').addEventListener('click', function () {
+      var clave = $('#f-tmdb').value.trim();
+      try { if (clave) localStorage.setItem(LS_TMDB, clave); else localStorage.removeItem(LS_TMDB); } catch (e) {}
+      if (!clave) { toast('Clave borrada'); return; }
+      tmdbBuscar('Sintel', 'peliculas').then(function () { toast('¡Clave guardada y funcionando!'); })
+        .catch(function (err) { toast(mensajeTmdb(err)); });
+    });
+
+    $('#btn-tmdb-completar').addEventListener('click', completarCaratulas);
+
     form.addEventListener('submit', function (ev) {
       ev.preventDefault();
+      var boton = $('#form-item [type=submit]');
+      // Sin carátula y con clave: se busca sola antes de guardar
+      if (!$('#f-poster').value.trim() && !$('#f-fondo').value.trim() && tmdbKey() && !EN_VIVO[tipo] && $('#f-titulo').value.trim()) {
+        boton.disabled = true;
+        toast('Buscando carátula…');
+        tmdbBuscar($('#f-titulo').value.trim(), tipo, $('#f-anio').value.trim())
+          .then(function (lista) { if (lista[0]) aplicarTmdb(lista[0], false); })
+          .catch(function () {})
+          .then(function () { boton.disabled = false; guardarFormulario(); });
+        return;
+      }
+      guardarFormulario();
+    });
+
+    function guardarFormulario() {
       var titulo = $('#f-titulo').value.trim();
       var video = $('#f-video').value.trim();
       var eps = [];
@@ -405,7 +579,7 @@
       toast(idx >= 0 ? 'Cambios guardados' : '¡Agregado a tu catálogo!');
       vistaMis();
       enfocarPrimero();
-    });
+    }
 
     var cancelar = $('#btn-cancelar');
     if (cancelar) cancelar.addEventListener('click', function () { state.editando = null; vistaMis(); enfocarPrimero(); });

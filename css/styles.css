@@ -185,6 +185,16 @@ textarea.campo { min-height: 6rem; resize: vertical; }
 .lista-mis .info b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lista-mis .info span { font-size: 0.8rem; color: var(--tenue); }
 
+.tmdb-res:empty { display: none; }
+.tmdb-res { margin-top: 0.8rem; }
+.tmdb-lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr)); gap: 0.8rem; margin-top: 0.5rem; }
+.tmdb-op { padding: 0.4rem; border: 1px solid var(--borde); border-radius: 0.7rem; background: var(--fondo-2); text-align: left; cursor: pointer; min-width: 0; }
+.tmdb-op:hover, .tmdb-op:focus-visible { background: var(--panel-2); }
+.tmdb-op .poster { border-radius: 0.5rem; box-shadow: none; }
+.tmdb-op .poster-gen { font-size: 0.7rem; padding: 0.4rem; }
+.tmdb-op b { display: block; font-size: 0.8rem; margin-top: 0.4rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tmdb-op span { font-size: 0.75rem; color: var(--tenue); }
+
 .buscador { max-width: 40rem; margin-bottom: 1.5rem; font-size: 1.3rem; padding: 1rem 1.3rem; }
 
 /* ---------- Modales ---------- */

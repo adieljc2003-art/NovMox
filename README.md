@@ -35,6 +35,15 @@ Entra a **Agregar** (el ícono **+** o el engrane) y llena el formulario:
 
 Lo que agregas así se guarda **en ese dispositivo** (en el navegador).
 
+### Carátulas automáticas con TMDB
+1. Crea una cuenta gratis en [themoviedb.org](https://www.themoviedb.org/signup).
+2. Ve a **Ajustes → API** ([themoviedb.org/settings/api](https://www.themoviedb.org/settings/api)) y solicita una clave (uso personal). Copia la **Clave de API** (v3) o el **token de lectura** (v4); sirve cualquiera de los dos.
+3. En NovMox entra a **Agregar**, pégala en **Carátulas automáticas (TMDB)** y pulsa **Guardar clave**.
+
+Listo: al agregar una película o serie sin póster, se buscan solos el póster, el fondo, el año y la descripción en español. Si quieres elegir tú (por ejemplo, cuando hay varias con el mismo nombre), usa **Buscar carátula en TMDB** debajo del título. **Completar carátulas faltantes** se las pone a todo lo que ya tenías agregado.
+
+La clave se guarda solo en tu dispositivo y no se sube al repositorio. Las carátulas quedan guardadas como enlaces dentro de cada película, así que tus amigos las ven sin necesitar ninguna clave.
+
 ### Para que todos tus amigos lo vean
 1. En **Agregar** pulsa **Descargar catalogo.json**.
 2. Reemplaza el archivo `data/catalogo.json` del repositorio por el que descargaste (en GitHub: abre el archivo → ✏️ editar, o *Add file → Upload files*).
