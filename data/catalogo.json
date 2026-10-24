@@ -1,0 +1,52 @@
+[
+  {
+    "id": "big-buck-bunny",
+    "titulo": "Big Buck Bunny",
+    "tipo": "infantil",
+    "anio": 2008,
+    "descripcion": "Un conejo gigante y bonachón decide darle una lección a tres roedores abusivos. Cortometraje animado libre de la Blender Foundation.",
+    "fondo": "https://peach.blender.org/wp-content/uploads/title_anouncement.jpg",
+    "video": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8",
+    "destacado": true
+  },
+  {
+    "id": "tears-of-steel",
+    "titulo": "Tears of Steel",
+    "tipo": "peliculas",
+    "anio": 2012,
+    "descripcion": "En un Ámsterdam futurista, un grupo de científicos intenta salvar al mundo de unos robots destructores. Ciencia ficción libre de la Blender Foundation.",
+    "fondo": "https://mango.blender.org/wp-content/uploads/2013/05/01_thom_celia_bridge.jpg",
+    "video": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8",
+    "destacado": true
+  },
+  {
+    "id": "sintel",
+    "titulo": "Sintel (tráiler)",
+    "tipo": "peliculas",
+    "anio": 2010,
+    "descripcion": "Una joven guerrera recorre tierras peligrosas buscando al pequeño dragón que crió como amigo. Tráiler de la película libre de la Blender Foundation.",
+    "fondo": "https://durian.blender.org/wp-content/uploads/2010/06/05.8b_comp_000272.jpg",
+    "video": "https://download.blender.org/durian/trailer/sintel_trailer-720p.mp4",
+    "destacado": true
+  },
+  {
+    "id": "cortos-abiertos",
+    "titulo": "Cortos Abiertos",
+    "tipo": "series",
+    "anio": 2006,
+    "descripcion": "Ejemplo de serie con episodios: varios cortometrajes libres en una sola ficha. Así puedes armar tus propias series.",
+    "fondo": "https://orange.blender.org/wp-content/themes/orange/images/media/gallery/s1_proog.jpg",
+    "episodios": [
+      { "titulo": "Big Buck Bunny", "video": "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8" },
+      { "titulo": "Sintel (tráiler)", "video": "https://download.blender.org/durian/trailer/sintel_trailer-480p.mp4" },
+      { "titulo": "Tears of Steel", "video": "https://test-streams.mux.dev/tos_ismc/main.m3u8" }
+    ]
+  },
+  {
+    "id": "canal-prueba-hls",
+    "titulo": "Canal de Prueba",
+    "tipo": "envivo",
+    "descripcion": "Canal de ejemplo en formato HLS (.m3u8) para comprobar que la transmisión funciona en tu tele. Reemplázalo por tus propios canales.",
+    "video": "https://test-streams.mux.dev/test_001/stream.m3u8"
+  }
+]
